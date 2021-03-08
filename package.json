@@ -2,28 +2,23 @@
     "name": "gatsby-remark-makecode",
     "version": "0.0.0",
     "dependencies": {
-        "@babel/runtime": "^7.13.9",
+        "@types/node": "^14.14.32",
         "hast-util-to-html": "^7.1.2",
         "mdast-util-to-hast": "^10.2.0",
         "puppeteer": "^8.0.0",
         "remark": "^13.0.0",
         "sharp": "^0.27.2",
+        "typescript": "^4.2.3",
         "unist-util-find": "^1.0.2",
         "unist-util-visit": "^2.0.3"
     },
-    "devDependencies": {
-        "@babel/cli": "^7.13.0",
-        "@babel/core": "^7.13.8",
-        "babel-preset-gatsby-package": "^1.1.0-next.1",
-        "cross-env": "^7.0.3"
-    },
-    "main": "index.js",
+    "main": "dist/index.js",
     "files": [
-        "*.js"
+        "dist/**"
     ],
     "scripts": {
-        "build": "babel --verbose --out-dir . src",
-        "watch": "babel --verbose -w src --out-dir ."
+        "build": "tsc",
+        "watch": "tsc --watch"
     },
     "engines": {
         "node": ">=12.13.0"

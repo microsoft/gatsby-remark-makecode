@@ -1,24 +1,28 @@
 const puppeteer = require("puppeteer");
-const crypto = require("crypto");
+const nodeCrypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
 
-let initPromise;
+let initPromise: Promise<void>;
 
-let editorUrl;
-let lang;
-let imagePath;
+let editorUrl: string;
+let lang: string;
+let imagePath: string;
 
 let browser;
 let page;
 
 let pendingRequests = {};
-let puppeteerVersion;
-let makecodeVersion;
+let puppeteerVersion: string;
+let makecodeVersion: string;
 
-const hash = (req) =>
-    crypto
+export interface RenderRequest {
+
+}
+
+const hash = (req: RenderRequest) =>
+    nodeCrypto
         .createHash("md5")
         .update(
             [
@@ -31,10 +35,10 @@ const hash = (req) =>
         )
         .digest("hex");
 
-const cacheName = (id) => path.join(imagePath, id + ".png");
+const cacheName = (id: string) => path.join(imagePath, id + ".png");
 
-exports.render = (req) => {
-    const id = hash(req);
+exports.render = (options: RenderRequest) => {
+    const id = hash(options);
     const fn = cacheName(id);
     console.debug(`mkcd: render ${id}`);
     if (fs.existsSync(fn)) {
@@ -42,7 +46,7 @@ exports.render = (req) => {
         return fn;
     }
     console.debug(`mkcd: new snippet ${id}`);
-    req = JSON.parse(JSON.stringify(req));
+    const req = JSON.parse(JSON.stringify(options));
     req.type = "renderblocks";
     req.id = id;
     req.options = req.options || {};
@@ -53,7 +57,7 @@ exports.render = (req) => {
             resolve,
         };
         page.evaluate(async (msg) => {
-            const docs = document.getElementById("docs");
+            const docs = document.getElementById("docs") as HTMLIFrameElement;
             docs.contentWindow.postMessage(msg, "*");
         }, req);
     });
@@ -82,7 +86,11 @@ const saveReq = (msg) => {
  * @param options
  * @returns
  */
-exports.init = (options) =>
+exports.init = (options: {
+    url: string;
+    cache: string;
+    lang?: string;
+}) =>
     initPromise ||
     (initPromise = new Promise((resolve) => {
         console.info(`mkcd: initializing`);
@@ -107,8 +115,7 @@ exports.init = (options) =>
                         makecodeVersion = JSON.stringify(msg.versions);
                         pendingRequests = {};
                         console.info(
-                            `mkcd: renderer ready (${
-                                msg.versions?.tag || "v?"
+                            `mkcd: renderer ready (${msg.versions?.tag || "v?"
                             })`
                         );
                         resolve();

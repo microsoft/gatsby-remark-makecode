@@ -1,10 +1,8 @@
-"use strict";
-
 const visit = require(`unist-util-visit`);
-
 const makecode = require("./makecode-headless");
 
 const validLanguages = [`blocks`];
+
 /*
 const remark = require("remark") 
 {
@@ -32,14 +30,13 @@ module.exports = async ({
     url,
     cache: "./public/images/makecode"
   });
-  /*
-    {
-      type: 'code',
-      lang: 'blocks',
-      value: 'let x = 0'
-    }
-  */
-
+/*
+  {
+    type: 'code',
+    lang: 'blocks',
+    value: 'let x = 0'
+  }
+*/  
   let codeNodes = [];
   visit(markdownAST, `code`, node => {
     const chunks = (node.lang || ``).match(/^(\S+)(\s+(.+))?/);
@@ -50,7 +47,6 @@ module.exports = async ({
 
     const lang = chunks[1];
     const attrString = chunks[3];
-
     if (validLanguages.includes(lang)) {
       node.lang = lang;
       codeNodes.push({
@@ -76,21 +72,23 @@ module.exports = async ({
         options: {
           pixelDensity: 1
         }
-      }); //console.log(`mkcd: img ${fn}`)
+      });
+      //console.log(`mkcd: img ${fn}`)
+      
       // mutate the current node, converting from a code block to markdown image tag
-
       /*
-      {
-      type: 'image',
-      title: null,
-      url: './imageurl.png',
-      alt: 'Caption',
-      position: [Position]
-      }
-        */
+{
+  type: 'image',
+  title: null,
+  url: './imageurl.png',
+  alt: 'Caption',
+  position: [Position]
+}
+
+       */
 
       node.type = `image`;
-      node.url = fn.replace(/^(static|public)/, '');
+      node.url = fn.replace(/^(static|public)/, '')
       node.value = undefined;
     } catch (error) {
       console.log(`Error during makecode execution. Leaving code block unchanged`);
