@@ -30,7 +30,7 @@ module.exports = async ({
   const url = "https://makecode.microbit.org/beta";
   await makecode.init({
     url,
-    cache: "./.cache/makecode"
+    cache: "./public/images/makecode"
   });
   /*
     {
@@ -72,9 +72,12 @@ module.exports = async ({
 
     try {
       const fn = await makecode.render({
-        code: value
-      });
-      console.log(`mkcd: img ${fn}`); // mutate the current node, converting from a code block to markdown image tag
+        code: value,
+        options: {
+          pixelDensity: 1
+        }
+      }); //console.log(`mkcd: img ${fn}`)
+      // mutate the current node, converting from a code block to markdown image tag
 
       /*
       {
@@ -87,7 +90,7 @@ module.exports = async ({
         */
 
       node.type = `image`;
-      node.url = fn;
+      node.url = fn.replace(/^(static|public)/, '');
       node.value = undefined;
     } catch (error) {
       console.log(`Error during makecode execution. Leaving code block unchanged`);
