@@ -89,8 +89,7 @@ module.exports = async ({
        */
 
       node.html = `html`;
-      node.url = `<div class="makecode"><img class="blocks" src="${url}" height=${height}" alt="MakeCode code snippet" loading="lazy" /></div>`
-      node.value = undefined;
+      node.value = `<div class="makecode"><img class="blocks" src="${url}" height=${height}" alt="MakeCode code snippet" loading="lazy" /></div>`
     } catch (error) {
       console.log(`Error during makecode execution. Leaving code block unchanged`);
       console.log(error);
