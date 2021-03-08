@@ -2,8 +2,6 @@
 
 const visit = require(`unist-util-visit`);
 
-const cheerio = require(`cheerio`);
-
 const makecode = require("./makecode-headless");
 
 const validLanguages = [`blocks`];
