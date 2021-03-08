@@ -5,10 +5,13 @@ Renders MakeCode code snippets into images as part of the Gatsby build.
 ## Adding plugin to Gastby
 
 * add plugin
+
 ```
 npm install --save gatsby-remark-makecode
 ```
+
 or
+
 ```
 yarn add gatsby-remark-makecode
 ```
@@ -34,6 +37,7 @@ yarn build
 ```
 yarn watch
 ```
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
