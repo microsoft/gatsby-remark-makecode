@@ -49,6 +49,13 @@ yarn build
 yarn watch
 ```
 
+## Skinning
+
+Classes
+
+* ``makecode`` on the container
+* ``blocks`` on the image
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
