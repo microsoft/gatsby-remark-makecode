@@ -75,8 +75,9 @@ const saveReq = (msg) => {
 
 exports.init = (options) =>
     initPromise ||
-    (initPromise = new Promise((resolve, reject) => {
+    (initPromise = new Promise((resolve) => {
         console.info(`mkcd: initializing ${options.url}`);
+        imagePath = options.cache;
         (async () => {
             console.info(`mkcd: storing images in ${imagePath}`);
             if (!fs.existsSync(imagePath))
