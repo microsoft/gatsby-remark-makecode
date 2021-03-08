@@ -29,4 +29,10 @@ jobs:
       - uses: bahmutov/npm-install@v1
       - run: ls -l
       - name: build
-        run: yarn build
+        run: yarn build  
+      - run: npx semantic-release
+        if: ${{ github.ref == 'refs/heads/main' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
