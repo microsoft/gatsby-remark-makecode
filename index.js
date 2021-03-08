@@ -1,7 +1,9 @@
 "use strict";
 
 const visit = require(`unist-util-visit`);
+
 const cheerio = require(`cheerio`);
+
 const makecode = require("./makecode-headless");
 
 const validLanguages = [`blocks`];
@@ -51,8 +53,7 @@ module.exports = async ({
       const id = resp.id;
       const dataUri = resp.uri; // Add default inline styling
 
-      console.log(`mkcd: img ${id} ${(dataUri.length / 1000 >> 0)}kb`)
-
+      console.log(`mkcd: img ${id} ${dataUri.length / 1000 >> 0}kb`);
       const $ = cheerio.load(`<img src="${dataUri}" />`);
       $(`img`).attr(`style`, `max-width: 100%; height: auto;`); // Merge custom attributes if provided by user (adds and overwrites)
 

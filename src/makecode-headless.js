@@ -3,21 +3,29 @@ const crypto = require("crypto")
 const fs = require("fs")
 const path = require("path")
 const sharp = require("sharp")
-const { promisify } = require("util")
-
-const writeFile = promisify(fs.writeFile)
+const { promisify } = require('util');
+const fsExists = promisify(fs.existsSync)
 
 let initPromise
 let browser
 let page
 let pendingRequests = {}
-let imagePath
+let imagePath = ".cache/makecode"
+let targetInfo
 
 const hash = req =>
-    crypto.createHash("md5").update(JSON.stringify(req)).digest("hex")
+    crypto.createHash("md5").update(JSON.stringify(req) + "|" + targetInfo).digest("hex")
+
+const cacheName = (id) => path.join(imagePath, id + ".png")
 
 exports.render = req => {
     const id = hash(req)
+    const fn = cacheName(id)
+    const efn = await fsExists(fn)
+    if (efn) {
+        console.debug(`mkcd: cache hit ${fn}`)
+        return fn;
+    }
 
     req = JSON.parse(JSON.stringify(req))
     req.type = "renderblocks"
@@ -36,12 +44,12 @@ exports.render = req => {
 }
 
 const saveReq = async msg => {
-    const fsvg = path.join(imagePath, msg.id + ".svg");
+    // id is the hash of the request
     const fpng = path.join(imagePath, msg.id + ".png");
-    await writeFile(fsvg, msg.svg, { encoding: "utf-8" })
-    await sharp(fsvg)
+    await sharp(msg.uri)
         .png()
         .toFile(fpng)
+    return fpng;
 }
 
 /**
@@ -59,12 +67,9 @@ exports.init = options =>
     (initPromise = new Promise((resolve, reject) => {
         console.info(`mkcd: initializing ${options.url}`)
         ;(async () => {
-            if (options.path) {
-                imagePath = options.path
-                console.info(`mkcd: storing images in ${imagePath}`)
-                if (!fs.existsSync(imagePath))
-                    fs.mkdirSync(imagePath, { recursive: true })
-            }
+            console.info(`mkcd: storing images in ${imagePath}`)
+            if (!fs.existsSync(imagePath))
+                fs.mkdirSync(imagePath, { recursive: true })
             browser = await puppeteer.launch()
             page = await browser.newPage()
             page.on("console", msg => console.log(msg.text()))
@@ -74,6 +79,7 @@ exports.init = options =>
                 switch (msg.type) {
                     case "renderready": {
                         console.info(`mkcd: renderer ready`)
+                        targetInfo = options.url + '|' + JSON.stringify(msg.versions) + '|'
                         pendingRequests = {}
                         resolve()
                         break
@@ -85,12 +91,10 @@ exports.init = options =>
                         const r = pendingRequests[id]
                         if (!r) return
                         delete pendingRequests[id]
-                        console.info(`mkcd: rendered`, msg.id)
-
-                        // render svg to png
-                        if (imagePath) saveReq(msg)
-
-                        r.resolve(msg)
+                        // render to file 
+                        const fn = saveReq(msg)
+                        console.info(`mkcd: rendered`, fn)
+                        r.resolve(fn)
                         break
                     }
                 }
