@@ -13,6 +13,9 @@ let imagePath: string;
 let browser;
 let page;
 
+let renderedCache: {
+    [id: string]: RenderResult
+} = {}
 let pendingRequests: {
     [id: string]: {
         resolve: (r: RenderRequest) => void,
@@ -50,12 +53,9 @@ const cacheName = (id: string) => path.join(imagePath, id + ".png");
 
 export function render(options: RenderRequest): Promise<RenderResult> {
     const id = hash(options);
-    const fn = cacheName(id);
-    //console.debug(`mkcd: render ${id}`);
-    if (fs.existsSync(fn)) {
-        // console.debug(`mkcd: cache hit ${fn}`);
-        return fn;
-    }
+    const cached = renderedCache[id]
+    if (cached)
+        return Promise.resolve(cached);
     console.debug(`mkcd: new snippet ${id}`);
     const req = JSON.parse(JSON.stringify(options));
     req.type = "renderblocks";
@@ -140,7 +140,8 @@ export function init(options: {
                             delete pendingRequests[id];
                             // render to file
                             const fn = saveReq(msg);
-                            r.resolve({
+                            // return and cache
+                            r.resolve(renderedCache[id] = {
                                 url: fn.replace(/^(static|public)/, '').replace("\\", "/"),
                                 width: msg.width,
                                 height: msg.height
