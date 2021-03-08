@@ -88,7 +88,7 @@ module.exports = async ({
        */
 
       node.type = `image`;
-      node.url = fn.replace(/^(static|public)/, '')
+      node.url = fn.replace(/^(static|public)/, '').replace("\\", "/")
       node.value = undefined;
     } catch (error) {
       console.log(`Error during makecode execution. Leaving code block unchanged`);
