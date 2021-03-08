@@ -142,7 +142,7 @@ export function init(options: {
                             const fn = saveReq(msg);
                             // return and cache
                             r.resolve(renderedCache[id] = {
-                                url: fn.replace(/^(static|public)/, '').replace("\\", "/"),
+                                url: fn.replace(/^(static|public)/, '').replace(/\\/g, "/"),
                                 width: msg.width,
                                 height: msg.height
                             })
