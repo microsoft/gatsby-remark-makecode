@@ -9,14 +9,16 @@ const fs = require("fs");
 const path = require("path");
 
 let initPromise;
+let editorUrl;
+let lang;
+let imagePath;
 let browser;
 let page;
 let pendingRequests = {};
-let imagePath;
 let puppeteerVersion;
 let makecodeVersion;
 
-const hash = req => crypto.createHash("md5").update(JSON.stringify(req) + "|" + makecodeVersion + "|" + puppeteerVersion).digest("hex");
+const hash = req => crypto.createHash("md5").update([JSON.stringify(req), editorUrl, makecodeVersion, puppeteerVersion, lang || "en"].join()).digest("hex");
 
 const cacheName = id => path.join(imagePath, id + ".png");
 
@@ -58,7 +60,7 @@ const saveReq = msg => {
   console.log(`mkcd: save ${fpng}`);
 
   if (uri.indexOf(pngPrefix) === 0) {
-    const data = Buffer.from(msg.uri, "base64");
+    const data = Buffer.from(uri.slice(pngPrefix.length), "base64");
     fs.writeFileSync(fpng, data, {
       encoding: "binary"
     });
@@ -69,19 +71,17 @@ const saveReq = msg => {
   return fpng;
 };
 /**
- * Loads the iframe in headless chrome
- * @param {*} options
- *
- *   {
- *      url: https://makecode.microbit.org/beta/,
- *      path: string
- *   }
+ * Initializes the makecode rendering engine
+ * @param options
+ * @returns
  */
 
 
 exports.init = options => initPromise || (initPromise = new Promise(resolve => {
-  console.info(`mkcd: initializing ${options.url}`);
+  console.info(`mkcd: initializing`);
+  editorUrl = options.url;
   imagePath = options.cache;
+  lang = options.lang;
 
   (async () => {
     console.info(`mkcd: storing images in ${imagePath}`);
@@ -103,7 +103,7 @@ exports.init = options => initPromise || (initPromise = new Promise(resolve => {
           {
             var _msg$versions;
 
-            makecodeVersion = options.url + "|" + JSON.stringify(msg.versions) + "|";
+            makecodeVersion = JSON.stringify(msg.versions);
             pendingRequests = {};
             console.info(`mkcd: renderer ready (${((_msg$versions = msg.versions) === null || _msg$versions === void 0 ? void 0 : _msg$versions.tag) || "v?"})`);
             resolve();
@@ -126,9 +126,10 @@ exports.init = options => initPromise || (initPromise = new Promise(resolve => {
           }
       }
     });
-    const rendererUrl = `${options.url}---docs?render=1&dbg=1`;
+    let rendererUrl = `${editorUrl}---docs?render=1&dbg=1`;
+    if (lang) rendererUrl = `&lang=${lang}`;
     const html = `<body>
-      <iframe id="docs" src=""></iframe>
+      <iframe id="docs" src="" style="left: 0; top: 0; width: 100%; height: 100%; position: absolute; border: none;"></iframe>
       <script>
           window.addEventListener("message", msg => {
               window.ssrPostMessage(msg.data)

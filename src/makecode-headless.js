@@ -4,10 +4,15 @@ const fs = require("fs");
 const path = require("path");
 
 let initPromise;
+
+let editorUrl;
+let lang;
+let imagePath;
+
 let browser;
 let page;
+
 let pendingRequests = {};
-let imagePath;
 let puppeteerVersion;
 let makecodeVersion;
 
@@ -15,7 +20,13 @@ const hash = (req) =>
     crypto
         .createHash("md5")
         .update(
-            JSON.stringify(req) + "|" + makecodeVersion + "|" + puppeteerVersion
+            [
+                JSON.stringify(req),
+                editorUrl,
+                makecodeVersion,
+                puppeteerVersion,
+                lang || "en",
+            ].join()
         )
         .digest("hex");
 
@@ -55,29 +66,28 @@ const saveReq = (msg) => {
 
     console.log(`mkcd: save ${fpng}`);
     if (uri.indexOf(pngPrefix) === 0) {
-        const data = Buffer.from(msg.uri, "base64");
+        const data = Buffer.from(uri.slice(pngPrefix.length), "base64");
         fs.writeFileSync(fpng, data, { encoding: "binary" });
     } else {
-        throw Error("not supported")
+        throw Error("not supported");
     }
     return fpng;
 };
 
 /**
- * Loads the iframe in headless chrome
- * @param {*} options
- *
- *   {
- *      url: https://makecode.microbit.org/beta/,
- *      path: string
- *   }
+ * Initializes the makecode rendering engine
+ * @param options
+ * @returns
  */
-
 exports.init = (options) =>
     initPromise ||
     (initPromise = new Promise((resolve) => {
-        console.info(`mkcd: initializing ${options.url}`);
+        console.info(`mkcd: initializing`);
+
+        editorUrl = options.url;
         imagePath = options.cache;
+        lang = options.lang;
+
         (async () => {
             console.info(`mkcd: storing images in ${imagePath}`);
             if (!fs.existsSync(imagePath))
@@ -91,11 +101,7 @@ exports.init = (options) =>
                 if (msg.source != "makecode") return;
                 switch (msg.type) {
                     case "renderready": {
-                        makecodeVersion =
-                            options.url +
-                            "|" +
-                            JSON.stringify(msg.versions) +
-                            "|";
+                        makecodeVersion = JSON.stringify(msg.versions);
                         pendingRequests = {};
                         console.info(
                             `mkcd: renderer ready (${
@@ -112,16 +118,17 @@ exports.init = (options) =>
                         if (!r) return;
                         delete pendingRequests[id];
                         // render to file
-                        const fn =saveReq(msg);
+                        const fn = saveReq(msg);
                         console.info(`mkcd: rendered`, fn);
                         r.resolve(fn);
                         break;
                     }
                 }
             });
-            const rendererUrl = `${options.url}---docs?render=1&dbg=1`;
+            let rendererUrl = `${editorUrl}---docs?render=1&dbg=1`;
+            if (lang) rendererUrl = `&lang=${lang}`;
             const html = `<body>
-      <iframe id="docs" src=""></iframe>
+      <iframe id="docs" src="" style="left: 0; top: 0; width: 100%; height: 100%; position: absolute; border: none;"></iframe>
       <script>
           window.addEventListener("message", msg => {
               window.ssrPostMessage(msg.data)
