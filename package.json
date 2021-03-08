@@ -3,7 +3,6 @@
     "version": "0.0.0",
     "dependencies": {
         "@babel/runtime": "^7.12.5",
-        "cheerio": "^1.0.0-rc.3",
         "sharp": "^0.27.2",
         "unist-util-visit": "^1.4.1",
         "hast-util-to-html": "^4.0.1",

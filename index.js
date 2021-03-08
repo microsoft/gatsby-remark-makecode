@@ -7,6 +7,24 @@ const cheerio = require(`cheerio`);
 const makecode = require("./makecode-headless");
 
 const validLanguages = [`blocks`];
+/*
+const remark = require("remark") 
+{
+const tree = remark().parse("![Caption](./imageurl.png)")
+visit(tree, "image", console.log)
+}
+{
+  const tree = remark().parse(
+`
+\`\`\`blocks
+let x = 0
+\`\`\`
+`
+
+  )
+  visit(tree, "code", console.log)
+  }
+*/
 
 module.exports = async ({
   markdownAST
@@ -15,6 +33,14 @@ module.exports = async ({
     url: "https://makecode.microbit.org/beta",
     path: ".cache/makecode"
   });
+  /*
+    {
+      type: 'code',
+      lang: 'blocks',
+      value: 'let x = 0'
+    }
+  */
+
   let codeNodes = [];
   visit(markdownAST, `code`, node => {
     const chunks = (node.lang || ``).match(/^(\S+)(\s+(.+))?/);
@@ -24,7 +50,7 @@ module.exports = async ({
     }
 
     const lang = chunks[1];
-    const attrString = chunks[3]; // Only act on languages supported by graphviz
+    const attrString = chunks[3];
 
     if (validLanguages.includes(lang)) {
       node.lang = lang;
@@ -46,26 +72,25 @@ module.exports = async ({
     } = node;
 
     try {
-      // Perform actual render
-      const resp = await makecode.render({
+      // render to a png file under .cache/makecode
+      const fn = await makecode.render({
         code: value
       });
-      const id = resp.id;
-      const dataUri = resp.uri; // Add default inline styling
+      console.log(`mkcd: img ${fn}`); // mutate the current node, converting from a code block to markdown image tag
 
-      console.log(`mkcd: img ${id} ${dataUri.length / 1000 >> 0}kb`);
-      const $ = cheerio.load(`<img src="${dataUri}" />`);
-      $(`img`).attr(`style`, `max-width: 100%; height: auto;`); // Merge custom attributes if provided by user (adds and overwrites)
+      /*
+      {
+      type: 'image',
+      title: null,
+      url: './imageurl.png',
+      alt: 'Caption',
+      position: [Position]
+      }
+        */
 
-      if (attrString) {
-        const attrElement = cheerio.load(`<element ${attrString}></element>`);
-        $(`img`).attr(attrElement(`element`).attr());
-      } // Mutate the current node. Converting from a code block to
-      // HTML (with svg content)
-
-
-      node.type = `html`;
-      node.value = $.html(`img`);
+      node.type = `image`;
+      node.url = fn;
+      node.value = undefined;
     } catch (error) {
       console.log(`Error during makecode execution. Leaving code block unchanged`);
       console.log(error);
