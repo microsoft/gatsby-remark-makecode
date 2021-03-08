@@ -77,17 +77,6 @@ module.exports = async ({
       //console.log(`mkcd: img ${fn}`)
       
       // mutate the current node, converting from a code block to markdown image tag
-      /*
-{
-  type: 'image',
-  title: null,
-  url: './imageurl.png',
-  alt: 'Caption',
-  position: [Position]
-}
-
-       */
-
       node.html = `html`;
       node.value = `<div class="makecode"><img class="blocks" src="${url}" height=${height}" alt="MakeCode code snippet" loading="lazy" /></div>`
     } catch (error) {
