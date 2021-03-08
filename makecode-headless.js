@@ -47,7 +47,7 @@ exports.render = req => {
   });
 };
 
-const saveReq = async msg => {
+const saveReq = msg => {
   // id is the hash of the request
   const {
     id,

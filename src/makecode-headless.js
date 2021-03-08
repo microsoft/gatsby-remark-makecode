@@ -47,7 +47,7 @@ exports.render = (req) => {
     });
 };
 
-const saveReq = async (msg) => {
+const saveReq = (msg) => {
     // id is the hash of the request
     const { id, uri } = msg;
     const pngPrefix = "data:image/png;base64,";
@@ -111,7 +111,7 @@ exports.init = (options) =>
                         if (!r) return;
                         delete pendingRequests[id];
                         // render to file
-                        const fn = saveReq(msg);
+                        const fn =saveReq(msg);
                         console.info(`mkcd: rendered`, fn);
                         r.resolve(fn);
                         break;
