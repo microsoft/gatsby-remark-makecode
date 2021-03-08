@@ -30,7 +30,7 @@ module.exports = async ({
   const url = "https://makecode.microbit.org/beta";
   await makecode.init({
     url,
-    cache: "./cache/makecode"
+    cache: "./.cache/makecode"
   });
   /*
     {
@@ -71,7 +71,6 @@ module.exports = async ({
     } = node;
 
     try {
-      // render to a png file under ./cache/makecode
       const fn = await makecode.render({
         code: value
       });
