@@ -40,9 +40,9 @@ const cacheName = (id: string) => path.join(imagePath, id + ".png");
 export function render(options: RenderRequest) {
     const id = hash(options);
     const fn = cacheName(id);
-    console.debug(`mkcd: render ${id}`);
+    //console.debug(`mkcd: render ${id}`);
     if (fs.existsSync(fn)) {
-        console.debug(`mkcd: cache hit ${fn}`);
+       // console.debug(`mkcd: cache hit ${fn}`);
         return fn;
     }
     console.debug(`mkcd: new snippet ${id}`);
