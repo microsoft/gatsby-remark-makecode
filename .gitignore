@@ -1,3 +1,3 @@
 node_modules
-index.js
-makecode-headless.js
+./index.js
+./makecode-headless.js
