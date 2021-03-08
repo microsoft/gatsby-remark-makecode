@@ -21,7 +21,6 @@ let x = 0
   visit(tree, "code", console.log)
   }
 */
-
 module.exports = async ({
   markdownAST
 }, pluginOptions = {}) => {
@@ -73,12 +72,13 @@ module.exports = async ({
           pixelDensity: 1
         }
       });
-      const { url, width, height } = rendered;
-      //console.log(`mkcd: img ${fn}`)
-      
-      // mutate the current node, converting from a code block to markdown image tag
-      node.html = `html`;
-      node.value = `<div class="makecode"><img class="blocks" src="${url}" height=${height}" alt="MakeCode code snippet" loading="lazy" /></div>`
+      // store rendered in node
+      node.value = JSON.stringify({
+        source: node.value,
+        rendered
+      })
+      //node.html = `html`;
+      //node.value = `<div class="makecode"><img class="blocks" src="${url}" height=${height}" alt="MakeCode code snippet" loading="lazy" /></div>`
     } catch (error) {
       console.log(`Error during makecode execution. Leaving code block unchanged`);
       console.log(error);
