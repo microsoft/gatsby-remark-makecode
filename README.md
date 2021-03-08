@@ -8,6 +8,11 @@ Renders MakeCode code snippets into images as part of the Gatsby build.
 ```
 npm install --save gatsby-remark-makecode
 ```
+or
+```
+yarn add gatsby-remark-makecode
+```
+
 * add puppeteer dependency to your project (full or core)
 * add entry in remark section **before** any image processing pluging
 

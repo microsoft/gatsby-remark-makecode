@@ -1,16 +1,21 @@
 {
     "name": "gatsby-remark-makecode",
     "version": "0.0.0",
+    "peerDependencies": {
+        "sharp": "^0.27.2"
+    },
     "dependencies": {
         "@types/node": "^14.14.32",
         "hast-util-to-html": "^7.1.2",
         "mdast-util-to-hast": "^10.2.0",
         "puppeteer": "^8.0.0",
         "remark": "^13.0.0",
-        "sharp": "^0.27.2",
         "typescript": "^4.2.3",
         "unist-util-find": "^1.0.2",
         "unist-util-visit": "^2.0.3"
+    },
+    "devDependencies": {
+        "sharp": "^0.27.2"
     },
     "main": "dist/index.js",
     "files": [
