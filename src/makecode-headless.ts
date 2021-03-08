@@ -80,7 +80,7 @@ const saveReq = (msg) => {
     const pngPrefix = "data:image/png;base64,";
     const fpng = cacheName(id);
 
-    console.debug(`mkcd: save ${fpng}`);
+    //console.debug(`mkcd: save ${fpng}`);
     if (uri.indexOf(pngPrefix) === 0) {
         const data = Buffer.from(uri.slice(pngPrefix.length), "base64");
         sharp(data)
@@ -135,7 +135,7 @@ export function init(options: {
                         case "renderblocks": {
                             const id = msg.id; // this is the id you sent
                             const r = pendingRequests[id];
-                            console.debug(`mkcd: received ${id}, ${r}`);
+                            //console.debug(`mkcd: received ${id}, ${r}`);
                             if (!r) return;
                             delete pendingRequests[id];
                             // render to file
