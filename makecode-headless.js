@@ -8,6 +8,8 @@ const fs = require("fs");
 
 const path = require("path");
 
+const sharp = require("sharp");
+
 let initPromise;
 let editorUrl;
 let lang;
@@ -61,9 +63,7 @@ const saveReq = msg => {
 
   if (uri.indexOf(pngPrefix) === 0) {
     const data = Buffer.from(uri.slice(pngPrefix.length), "base64");
-    fs.writeFileSync(fpng, data, {
-      encoding: "binary"
-    });
+    sharp(data).resize(undefined, msg.height).toFile(fpng);
   } else {
     throw Error("not supported");
   }

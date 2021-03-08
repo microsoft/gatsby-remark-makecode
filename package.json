@@ -7,6 +7,7 @@
         "mdast-util-to-hast": "^10.2.0",
         "puppeteer": "^8.0.0",
         "remark": "^13.0.0",
+        "sharp": "^0.27.2",
         "unist-util-find": "^1.0.2",
         "unist-util-visit": "^2.0.3"
     },

@@ -2,6 +2,7 @@ const puppeteer = require("puppeteer");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+const sharp = require("sharp");
 
 let initPromise;
 
@@ -67,7 +68,9 @@ const saveReq = (msg) => {
     console.log(`mkcd: save ${fpng}`);
     if (uri.indexOf(pngPrefix) === 0) {
         const data = Buffer.from(uri.slice(pngPrefix.length), "base64");
-        fs.writeFileSync(fpng, data, { encoding: "binary" });
+        sharp(data)
+            .resize(undefined, msg.height)
+            .toFile(fpng);
     } else {
         throw Error("not supported");
     }
