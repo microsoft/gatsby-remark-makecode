@@ -37,7 +37,7 @@ const hash = (req: RenderRequest) =>
 
 const cacheName = (id: string) => path.join(imagePath, id + ".png");
 
-exports.render = (options: RenderRequest) => {
+export function render(options: RenderRequest) {
     const id = hash(options);
     const fn = cacheName(id);
     console.debug(`mkcd: render ${id}`);
@@ -86,58 +86,58 @@ const saveReq = (msg) => {
  * @param options
  * @returns
  */
-exports.init = (options: {
+export function init(options: {
     url: string;
     cache: string;
     lang?: string;
-}) =>
-    initPromise ||
-    (initPromise = new Promise((resolve) => {
-        console.info(`mkcd: initializing`);
+}) {
+    return initPromise ||
+        (initPromise = new Promise((resolve) => {
+            console.info(`mkcd: initializing`);
 
-        editorUrl = options.url;
-        imagePath = options.cache;
-        lang = options.lang;
+            editorUrl = options.url;
+            imagePath = options.cache;
+            lang = options.lang;
 
-        (async () => {
-            console.info(`mkcd: storing images in ${imagePath}`);
-            if (!fs.existsSync(imagePath))
-                fs.mkdirSync(imagePath, { recursive: true });
-            browser = await puppeteer.launch({ headless: true });
-            puppeteerVersion = await browser.version();
-            console.info(`mkcd: browser ${puppeteerVersion}`);
-            page = await browser.newPage();
-            page.on("console", (msg) => console.log(msg.text()));
-            await page.exposeFunction("ssrPostMessage", (msg) => {
-                if (msg.source != "makecode") return;
-                switch (msg.type) {
-                    case "renderready": {
-                        makecodeVersion = JSON.stringify(msg.versions);
-                        pendingRequests = {};
-                        console.info(
-                            `mkcd: renderer ready (${msg.versions?.tag || "v?"
-                            })`
-                        );
-                        resolve();
-                        break;
+            (async () => {
+                console.info(`mkcd: storing images in ${imagePath}`);
+                if (!fs.existsSync(imagePath))
+                    fs.mkdirSync(imagePath, { recursive: true });
+                browser = await puppeteer.launch({ headless: true });
+                puppeteerVersion = await browser.version();
+                console.info(`mkcd: browser ${puppeteerVersion}`);
+                page = await browser.newPage();
+                page.on("console", (msg) => console.log(msg.text()));
+                await page.exposeFunction("ssrPostMessage", (msg) => {
+                    if (msg.source != "makecode") return;
+                    switch (msg.type) {
+                        case "renderready": {
+                            makecodeVersion = JSON.stringify(msg.versions);
+                            pendingRequests = {};
+                            console.info(
+                                `mkcd: renderer ready (${msg.versions?.tag || "v?"
+                                })`
+                            );
+                            resolve();
+                            break;
+                        }
+                        case "renderblocks": {
+                            const id = msg.id; // this is the id you sent
+                            const r = pendingRequests[id];
+                            console.debug(`mkcd: received ${id}, ${r}`);
+                            if (!r) return;
+                            delete pendingRequests[id];
+                            // render to file
+                            const fn = saveReq(msg);
+                            console.info(`mkcd: rendered`, fn);
+                            r.resolve(fn);
+                            break;
+                        }
                     }
-                    case "renderblocks": {
-                        const id = msg.id; // this is the id you sent
-                        const r = pendingRequests[id];
-                        console.debug(`mkcd: received ${id}, ${r}`);
-                        if (!r) return;
-                        delete pendingRequests[id];
-                        // render to file
-                        const fn = saveReq(msg);
-                        console.info(`mkcd: rendered`, fn);
-                        r.resolve(fn);
-                        break;
-                    }
-                }
-            });
-            let rendererUrl = `${editorUrl}---docs?render=1&dbg=1`;
-            if (lang) rendererUrl = `&lang=${lang}`;
-            const html = `<body>
+                });
+                let rendererUrl = `${editorUrl}---docs?render=1&dbg=1`;
+                if (lang) rendererUrl = `&lang=${lang}`;
+                const html = `<body>
       <iframe id="docs" src="" style="left: 0; top: 0; width: 100%; height: 100%; position: absolute; border: none;"></iframe>
       <script>
           window.addEventListener("message", msg => {
@@ -147,7 +147,8 @@ exports.init = (options: {
           docs.src="${rendererUrl}"
       </script>
       </body>`;
-            console.info(`mkcd: loading ${rendererUrl}`);
-            await page.setContent(html);
-        })();
-    }));
+                console.info(`mkcd: loading ${rendererUrl}`);
+                await page.setContent(html);
+            })();
+        }))
+}
