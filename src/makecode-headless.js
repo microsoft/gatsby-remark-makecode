@@ -2,21 +2,21 @@ const puppeteer = require("puppeteer");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const sharp = require("sharp");
-const { promisify } = require("util");
-const fsExists = promisify(fs.existsSync);
 
 let initPromise;
 let browser;
 let page;
 let pendingRequests = {};
 let imagePath = ".cache/makecode";
-let targetInfo;
+let puppeteerVersion;
+let makecodeVersion;
 
 const hash = (req) =>
     crypto
         .createHash("md5")
-        .update(JSON.stringify(req) + "|" + targetInfo)
+        .update(
+            JSON.stringify(req) + "|" + makecodeVersion + "|" + puppeteerVersion
+        )
         .digest("hex");
 
 const cacheName = (id) => path.join(imagePath, id + ".png");
@@ -24,32 +24,42 @@ const cacheName = (id) => path.join(imagePath, id + ".png");
 exports.render = (req) => {
     const id = hash(req);
     const fn = cacheName(id);
-    return fsExists(fn).then((efn) => {
-        if (efn) {
-            console.debug(`mkcd: cache hit ${fn}`);
-            return fn;
-        }
-        req = JSON.parse(JSON.stringify(req));
-        req.type = "renderblocks";
-        req.id = id;
-        req.options = req.options || {};
-        return new Promise((resolve, reject) => {
-            pendingRequests[req.id] = {
-                req,
-                resolve,
-            };
-            page.evaluate(async (msg) => {
-                const docs = document.getElementById("docs");
-                docs.contentWindow.postMessage(msg, "*");
-            }, req);
-        });
+    console.debug(`mkcd: render ${id}`);
+    if (fs.existsSync(fn)) {
+        console.debug(`mkcd: cache hit ${fn}`);
+        return fn;
+    }
+    console.debug(`mkcd: new snippet ${id}`);
+    req = JSON.parse(JSON.stringify(req));
+    req.type = "renderblocks";
+    req.id = id;
+    req.options = req.options || {};
+
+    return new Promise((resolve, reject) => {
+        pendingRequests[req.id] = {
+            req,
+            resolve,
+        };
+        page.evaluate(async (msg) => {
+            const docs = document.getElementById("docs");
+            docs.contentWindow.postMessage(msg, "*");
+        }, req);
     });
 };
 
 const saveReq = async (msg) => {
     // id is the hash of the request
-    const fpng = path.join(imagePath, msg.id + ".png");
-    await sharp(msg.uri).png().toFile(fpng);
+    const { id, uri } = msg;
+    const pngPrefix = "data:image/png;base64,";
+    const fpng = cacheName(id);
+
+    console.log(`mkcd: save ${fpng}`);
+    if (uri.indexOf(pngPrefix) === 0) {
+        const data = Buffer.from(msg.uri, "base64");
+        fs.writeFileSync(fpng, data, { encoding: "binary" });
+    } else {
+        throw Error("not supported")
+    }
     return fpng;
 };
 
@@ -71,29 +81,33 @@ exports.init = (options) =>
             console.info(`mkcd: storing images in ${imagePath}`);
             if (!fs.existsSync(imagePath))
                 fs.mkdirSync(imagePath, { recursive: true });
-            browser = await puppeteer.launch();
+            browser = await puppeteer.launch({ headless: false });
+            puppeteerVersion = await browser.version();
+            console.info(`mkcd: browser ${puppeteerVersion}`);
             page = await browser.newPage();
             page.on("console", (msg) => console.log(msg.text()));
             await page.exposeFunction("ssrPostMessage", (msg) => {
                 if (msg.source != "makecode") return;
-
                 switch (msg.type) {
                     case "renderready": {
-                        console.info(`mkcd: renderer ready`);
-                        targetInfo =
+                        makecodeVersion =
                             options.url +
                             "|" +
                             JSON.stringify(msg.versions) +
                             "|";
                         pendingRequests = {};
+                        console.info(
+                            `mkcd: renderer ready (${
+                                msg.versions?.tag || "v?"
+                            })`
+                        );
                         resolve();
                         break;
                     }
-
                     case "renderblocks": {
                         const id = msg.id; // this is the id you sent
-
                         const r = pendingRequests[id];
+                        console.debug(`mkcd: received ${id}, ${r}`);
                         if (!r) return;
                         delete pendingRequests[id];
                         // render to file
@@ -104,11 +118,13 @@ exports.init = (options) =>
                     }
                 }
             });
-            const rendererUrl = `${options.url}---docs?render=1`;
+            const rendererUrl = `${options.url}---docs?render=1&dbg=1`;
             const html = `<body>
       <iframe id="docs" src=""></iframe>
       <script>
-          window.addEventListener("message", msg => window.ssrPostMessage(msg.data), false);
+          window.addEventListener("message", msg => {
+              window.ssrPostMessage(msg.data)
+          }, false);
           const docs = document.getElementById("docs")
           docs.src="${rendererUrl}"
       </script>

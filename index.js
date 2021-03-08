@@ -27,8 +27,9 @@ let x = 0
 module.exports = async ({
   markdownAST
 }, pluginOptions = {}) => {
+  const url = "https://makecode.microbit.org/beta";
   await makecode.init({
-    url: "https://makecode.microbit.org/beta",
+    url,
     path: ".cache/makecode"
   });
   /*
