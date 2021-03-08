@@ -17,11 +17,22 @@ yarn add gatsby-remark-makecode
 ```
 
 * add puppeteer dependency to your project (full or core)
+
+## Configuring the plugin
+
 * add entry in remark section **before** any image processing pluging
 
 ```
     "gatsby-remark-makecode",
 ```
+
+## Using the plugin
+
+In your .md, .mdx files, you can insert JavaScript snippets to be rendered in blocks.
+
+    ```blocks
+    let x = 0
+    ```
 
 ## Development
 
