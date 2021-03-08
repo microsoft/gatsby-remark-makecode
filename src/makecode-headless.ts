@@ -93,7 +93,7 @@ export function init(options: {
 }) {
     return initPromise ||
         (initPromise = new Promise((resolve) => {
-            console.info(`mkcd: initializing`);
+            console.debug(`mkcd: initializing`);
 
             editorUrl = options.url;
             imagePath = options.cache;
