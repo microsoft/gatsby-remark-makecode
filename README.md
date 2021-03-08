@@ -2,6 +2,19 @@
 
 Renders MakeCode code snippets into images as part of the Gatsby build.
 
+## Adding plugin to Gastby
+
+* add plugin
+```
+npm install --save gatsby-remark-makecode
+```
+* add puppeteer dependency to your project (full or core)
+* add entry in remark section **before** any image processing pluging
+
+```
+    "gatsby-remark-makecode",
+```
+
 ## Development
 
 * install node.js and yarn globally
@@ -16,7 +29,6 @@ yarn build
 ```
 yarn watch
 ```
-
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
