@@ -89,7 +89,7 @@ exports.init = options => initPromise || (initPromise = new Promise(resolve => {
       recursive: true
     });
     browser = await puppeteer.launch({
-      headless: false
+      headless: true
     });
     puppeteerVersion = await browser.version();
     console.info(`mkcd: browser ${puppeteerVersion}`);
