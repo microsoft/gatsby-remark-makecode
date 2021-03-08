@@ -27,5 +27,6 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.1.5
       - uses: bahmutov/npm-install@v1
+      - run: ls -l
       - name: build
         run: yarn build
