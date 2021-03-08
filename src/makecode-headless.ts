@@ -69,7 +69,7 @@ const saveReq = (msg) => {
     const pngPrefix = "data:image/png;base64,";
     const fpng = cacheName(id);
 
-    console.log(`mkcd: save ${fpng}`);
+    console.debug(`mkcd: save ${fpng}`);
     if (uri.indexOf(pngPrefix) === 0) {
         const data = Buffer.from(uri.slice(pngPrefix.length), "base64");
         sharp(data)
@@ -129,7 +129,6 @@ export function init(options: {
                             delete pendingRequests[id];
                             // render to file
                             const fn = saveReq(msg);
-                            console.info(`mkcd: rendered`, fn);
                             r.resolve(fn);
                             break;
                         }
