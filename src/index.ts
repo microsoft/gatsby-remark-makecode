@@ -67,12 +67,13 @@ module.exports = async ({
     } = node;
 
     try {
-      const fn = await makecode.render({
+      const rendered = await makecode.render({
         code: value,
         options: {
           pixelDensity: 1
         }
       });
+      const { url, width, height } = rendered;
       //console.log(`mkcd: img ${fn}`)
       
       // mutate the current node, converting from a code block to markdown image tag
@@ -87,8 +88,8 @@ module.exports = async ({
 
        */
 
-      node.type = `image`;
-      node.url = fn.replace(/^(static|public)/, '').replace("\\", "/")
+      node.html = `html`;
+      node.url = `<div class="makecode"><img class="blocks" src="${url}" height=${height}" alt="MakeCode code snippet" loading="lazy" /></div>`
       node.value = undefined;
     } catch (error) {
       console.log(`Error during makecode execution. Leaving code block unchanged`);

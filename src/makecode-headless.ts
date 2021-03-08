@@ -13,12 +13,23 @@ let imagePath: string;
 let browser;
 let page;
 
-let pendingRequests = {};
+let pendingRequests: {
+    [id: string]: {
+        resolve: (r: RenderRequest) => void,
+        req: any
+    }
+} = {};
 let puppeteerVersion: string;
 let makecodeVersion: string;
 
 export interface RenderRequest {
 
+}
+
+export interface RenderResult {
+    url: string;
+    width: number;
+    height: number;
 }
 
 const hash = (req: RenderRequest) =>
@@ -37,12 +48,12 @@ const hash = (req: RenderRequest) =>
 
 const cacheName = (id: string) => path.join(imagePath, id + ".png");
 
-export function render(options: RenderRequest) {
+export function render(options: RenderRequest): Promise<RenderResult> {
     const id = hash(options);
     const fn = cacheName(id);
     //console.debug(`mkcd: render ${id}`);
     if (fs.existsSync(fn)) {
-       // console.debug(`mkcd: cache hit ${fn}`);
+        // console.debug(`mkcd: cache hit ${fn}`);
         return fn;
     }
     console.debug(`mkcd: new snippet ${id}`);
@@ -129,7 +140,11 @@ export function init(options: {
                             delete pendingRequests[id];
                             // render to file
                             const fn = saveReq(msg);
-                            r.resolve(fn);
+                            r.resolve({
+                                url: fn.replace(/^(static|public)/, '').replace("\\", "/"),
+                                width: msg.width,
+                                height: msg.height
+                            })
                             break;
                         }
                     }
