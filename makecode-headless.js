@@ -12,7 +12,7 @@ let initPromise;
 let browser;
 let page;
 let pendingRequests = {};
-let imagePath = ".cache/makecode";
+let imagePath;
 let puppeteerVersion;
 let makecodeVersion;
 
