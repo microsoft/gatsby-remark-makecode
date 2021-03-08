@@ -1,6 +1,6 @@
 {
     "name": "gatsby-remark-makecode",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "peerDependencies": {
         "sharp": "^0.27.2"
     },
