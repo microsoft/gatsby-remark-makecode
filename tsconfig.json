@@ -5,7 +5,8 @@
       "moduleResolution": "node",
       "outDir": "dist",
       "declaration": false,
-      "noEmitHelpers": true
+      "noEmitHelpers": true,
+      "skipLibCheck": true
     },
     "files": [
       "./node_modules/@types/node/index.d.ts"
