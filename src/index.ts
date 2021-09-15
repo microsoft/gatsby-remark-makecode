@@ -76,7 +76,7 @@ module.exports = async (
                     pixelDensity: 1,
                     package: sniffPackages(value),
                 };
-                console.debug(`makecode snippet`, options);
+                //console.debug(`makecode snippet`, options);
                 const rendered = await render({
                     code: value,
                     options,
