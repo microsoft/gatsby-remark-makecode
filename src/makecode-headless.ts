@@ -1,8 +1,8 @@
-const puppeteer = require("puppeteer");
-const nodeCrypto = require("crypto");
-const fs = require("fs");
-const path = require("path");
-const sharp = require("sharp");
+import * as puppeteer from "puppeteer";
+import * as nodeCrypto from "crypto";
+import * as fs from "fs";
+import * as path from "path";
+import * as sharp from "sharp";
 
 let initPromise: Promise<void>;
 
@@ -13,21 +13,19 @@ let imagePath: string;
 let browser;
 let page;
 
-let renderedCache: {
-    [id: string]: RenderResult
-} = {}
+const renderedCache: {
+    [id: string]: RenderResult;
+} = {};
 let pendingRequests: {
     [id: string]: {
-        resolve: (r: RenderRequest) => void,
-        req: any
-    }
+        resolve: (r: RenderRequest) => void;
+        req: any;
+    };
 } = {};
 let puppeteerVersion: string;
 let makecodeVersion: string;
 
-export interface RenderRequest {
-
-}
+export interface RenderRequest {}
 
 export interface RenderResult {
     url: string;
@@ -53,9 +51,8 @@ const cacheName = (id: string) => path.join(imagePath, id + ".png");
 
 export function render(options: RenderRequest): Promise<RenderResult> {
     const id = hash(options);
-    const cached = renderedCache[id]
-    if (cached)
-        return Promise.resolve(cached);
+    const cached = renderedCache[id];
+    if (cached) return Promise.resolve(cached);
     console.debug(`mkcd: new snippet ${id}`);
     const req = JSON.parse(JSON.stringify(options));
     req.type = "renderblocks";
@@ -72,7 +69,7 @@ export function render(options: RenderRequest): Promise<RenderResult> {
             docs.contentWindow.postMessage(msg, "*");
         }, req);
     });
-};
+}
 
 const saveReq = (msg) => {
     // id is the hash of the request
@@ -83,9 +80,7 @@ const saveReq = (msg) => {
     //console.debug(`mkcd: save ${fpng}`);
     if (uri.indexOf(pngPrefix) === 0) {
         const data = Buffer.from(uri.slice(pngPrefix.length), "base64");
-        sharp(data)
-            .resize(undefined, msg.height)
-            .toFile(fpng);
+        sharp(data).resize(undefined, msg.height).toFile(fpng);
     } else {
         throw Error("not supported");
     }
@@ -97,12 +92,9 @@ const saveReq = (msg) => {
  * @param options
  * @returns
  */
-export function init(options: {
-    url: string;
-    cache: string;
-    lang?: string;
-}) {
-    return initPromise ||
+export function init(options: { url: string; cache: string; lang?: string }) {
+    return (
+        initPromise ||
         (initPromise = new Promise((resolve) => {
             console.debug(`mkcd: initializing`);
 
@@ -126,7 +118,8 @@ export function init(options: {
                             makecodeVersion = JSON.stringify(msg.versions);
                             pendingRequests = {};
                             console.info(
-                                `mkcd: renderer ready (${msg.versions?.tag || "v?"
+                                `mkcd: renderer ready (${
+                                    msg.versions?.tag || "v?"
                                 })`
                             );
                             resolve();
@@ -141,11 +134,15 @@ export function init(options: {
                             // render to file
                             const fn = saveReq(msg);
                             // return and cache
-                            r.resolve(renderedCache[id] = {
-                                url: fn.replace(/^(static|public)/, '').replace(/\\/g, "/"),
-                                width: msg.width,
-                                height: msg.height
-                            })
+                            r.resolve(
+                                (renderedCache[id] = {
+                                    url: fn
+                                        .replace(/^(static|public)/, "")
+                                        .replace(/\\/g, "/"),
+                                    width: msg.width,
+                                    height: msg.height,
+                                })
+                            );
                             break;
                         }
                     }
@@ -166,4 +163,5 @@ export function init(options: {
                 await page.setContent(html);
             })();
         }))
+    );
 }

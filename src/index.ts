@@ -1,14 +1,42 @@
 const visit = require(`unist-util-visit`);
-const makecode = require("./makecode-headless");
+import { init, render } from "./makecode-headless";
+const fetch = require("node-fetch");
 
+let jacdacExtensions: any;
 const validLanguages = [`blocks`];
+
+const sniffPackages = (src: string) => {
+    const dependencies = {};
+    jacdacExtensions
+        .filter((info) => {
+            return (
+                src.indexOf(info.client.qName) > -1 ||
+                (info.client.default && src.indexOf(info.client.default) > -1)
+            );
+        })
+        .map(
+            (info) =>
+                `${info.client.name.replace(/^pxt-/, "")}=github:${
+                    info.client.repo
+                }`
+        )
+        .forEach((dep) => (dependencies[dep] = "1"));
+
+    if (Object.keys(dependencies))
+        dependencies["jacdac=github:microsoft/pxt-jacdac"] = "1";
+    return Object.keys(dependencies).join("\n");
+};
 
 module.exports = async (
     { markdownAST },
     pluginOptions: { editorUrl?: string } = {}
 ) => {
     const url = pluginOptions?.editorUrl || "https://makecode.microbit.org/";
-    await makecode.init({
+    const resp = await fetch(
+        "https://raw.githubusercontent.com/microsoft/jacdac/main/services/makecode-extensions.json"
+    );
+    jacdacExtensions = await resp.json();
+    await init({
         url,
         cache: "./public/images/makecode",
     });
@@ -44,11 +72,14 @@ module.exports = async (
             const { value, lang } = node;
 
             try {
-                const rendered = await makecode.render({
+                const options = {
+                    pixelDensity: 1,
+                    package: sniffPackages(value),
+                };
+                console.debug(`makecode snippet`, options);
+                const rendered = await render({
                     code: value,
-                    options: {
-                        pixelDensity: 1,
-                    },
+                    options,
                 });
                 // store rendered in node
                 node.value = JSON.stringify({
