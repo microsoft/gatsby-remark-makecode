@@ -24,7 +24,7 @@ const sniffPackages = (src: string) => {
 
     if (Object.keys(dependencies))
         dependencies["jacdac=github:microsoft/pxt-jacdac"] = "1";
-    return Object.keys(dependencies).join("\n");
+    return Object.keys(dependencies).join(",");
 };
 
 module.exports = async (
