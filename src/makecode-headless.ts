@@ -137,7 +137,7 @@ export function init(options: { url: string; cache: string; lang?: string }) {
                             // return and cache
                             r.resolve(
                                 (renderedCache[id] = {
-                                    req: r,
+                                    req: r.req,
                                     url: fn
                                         .replace(/^(static|public)/, "")
                                         .replace(/\\/g, "/"),
