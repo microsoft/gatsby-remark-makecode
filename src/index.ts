@@ -22,9 +22,9 @@ const sniffPackages = (src: string) => {
         )
         .forEach((dep) => (dependencies[dep] = "1"));
 
-    if (Object.keys(dependencies))
-        dependencies["jacdac=github:microsoft/pxt-jacdac"] = "1";
-    return Object.keys(dependencies).join(",");
+    const deps = Object.keys(dependencies);
+    if (deps.length) deps.unshift("jacdac=github:microsoft/pxt-jacdac");
+    return deps.join(",");
 };
 
 module.exports = async (
