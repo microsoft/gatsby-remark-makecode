@@ -28,6 +28,7 @@ let makecodeVersion: string;
 export interface RenderRequest {}
 
 export interface RenderResult {
+    req: RenderRequest;
     url: string;
     width: number;
     height: number;
@@ -136,6 +137,7 @@ export function init(options: { url: string; cache: string; lang?: string }) {
                             // return and cache
                             r.resolve(
                                 (renderedCache[id] = {
+                                    req: r,
                                     url: fn
                                         .replace(/^(static|public)/, "")
                                         .replace(/\\/g, "/"),
