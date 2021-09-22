@@ -1,6 +1,6 @@
 {
     "name": "gatsby-remark-makecode",
-    "version": "1.0.14",
+    "version": "1.0.15",
     "peerDependencies": {
         "puppeteer": "^10.2.0",
         "sharp": "^0.29.1"
