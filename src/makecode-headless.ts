@@ -135,7 +135,7 @@ export function init(options: { url: string; cache: string; lang?: string }) {
                             // render to file
                             const fn = saveReq(msg);
                             // return and cache
-                            console.debug(`mkcd: rendered ${fn}`);
+                            console.debug(`mkcd: done ${fn}`);
                             r.resolve(
                                 (renderedCache[id] = {
                                     req: r.req,
