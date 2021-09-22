@@ -60,7 +60,7 @@ export function render(options: RenderRequest): Promise<RenderResult> {
     req.id = id;
     req.options = req.options || {};
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         pendingRequests[req.id] = {
             req,
             resolve,

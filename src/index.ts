@@ -3,6 +3,26 @@ import { init, render } from "./makecode-headless";
 const fetch = require("node-fetch");
 
 let jacdacExtensions: any;
+let jacdacVersion: string;
+async function fetchJacdacInfo() {
+    jacdacExtensions = await (
+        await fetch(
+            "https://raw.githubusercontent.com/microsoft/jacdac/main/services/makecode-extensions.json"
+        )
+    ).json();
+    jacdacVersion = (
+        await (
+            await fetch(
+                "https://raw.githubusercontent.com/microsoft/pxt-jacdac/master/pxt.json"
+            )
+        ).json()
+    ).version;
+
+    console.debug(`mkcd: jacdac version ${jacdacVersion}`);
+    return { jacdacExtensions, jacdacVersion };
+}
+const jacdacInfoPromise = fetchJacdacInfo();
+
 const validLanguages = [`blocks`];
 
 const sniffPackages = (src: string) => {
@@ -18,12 +38,13 @@ const sniffPackages = (src: string) => {
             (info) =>
                 `${info.client.name.replace(/^pxt-/, "")}=github:${
                     info.client.repo
-                }`
+                }#v${jacdacVersion}`
         )
         .forEach((dep) => (dependencies[dep] = "1"));
 
     const deps = Object.keys(dependencies);
-    if (deps.length) deps.unshift("jacdac=github:microsoft/pxt-jacdac");
+    if (deps.length)
+        deps.unshift(`jacdac=github:microsoft/pxt-jacdac#v${jacdacVersion}`);
     return deps.join(",");
 };
 
@@ -32,10 +53,7 @@ module.exports = async (
     pluginOptions: { editorUrl?: string } = {}
 ) => {
     const url = pluginOptions?.editorUrl || "https://makecode.microbit.org/";
-    const resp = await fetch(
-        "https://raw.githubusercontent.com/microsoft/jacdac/main/services/makecode-extensions.json"
-    );
-    jacdacExtensions = await resp.json();
+    await jacdacInfoPromise;
     await init({
         url,
         cache: "./public/images/makecode",
@@ -76,6 +94,7 @@ module.exports = async (
                     pixelDensity: 1,
                     package: sniffPackages(value),
                 };
+
                 //console.debug(`makecode snippet`, options);
                 const rendered = await render({
                     code: value,
