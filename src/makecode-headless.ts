@@ -9,13 +9,11 @@ let initPromise: Promise<void>;
 let editorUrl: string;
 let lang: string;
 let imagePath: string;
+let extraCacheKey: string;
 
 let browser;
 let page;
 
-const renderedCache: {
-    [id: string]: RenderResult;
-} = {};
 let pendingRequests: {
     [id: string]: {
         resolve: (r: RenderRequest) => void;
@@ -25,13 +23,11 @@ let pendingRequests: {
 let puppeteerVersion: string;
 let makecodeVersion: string;
 
-export interface RenderRequest {}
+export type RenderRequest = any;
 
 export interface RenderResult {
     req: RenderRequest;
     url: string;
-    width: number;
-    height: number;
 }
 
 const hash = (req: RenderRequest) =>
@@ -43,6 +39,7 @@ const hash = (req: RenderRequest) =>
                 editorUrl,
                 makecodeVersion,
                 puppeteerVersion,
+                extraCacheKey,
                 lang || "en",
             ].join()
         )
@@ -52,13 +49,19 @@ const cacheName = (id: string) => path.join(imagePath, id + ".png");
 
 export function render(options: RenderRequest): Promise<RenderResult> {
     const id = hash(options);
-    const cached = renderedCache[id];
-    if (cached) return Promise.resolve(cached);
-    console.debug(`mkcd: new snippet ${id}`);
+
     const req = JSON.parse(JSON.stringify(options));
     req.type = "renderblocks";
     req.id = id;
     req.options = req.options || {};
+
+    const fpng = cacheName(id);
+    if (fs.existsSync(fpng)) {
+        console.debug(`mkcd: cached snippet ${id}`);
+        return Promise.resolve({ req, url: fileToUrl(fpng) });
+    }
+
+    console.debug(`mkcd: new snippet ${id}`);
 
     return new Promise((resolve) => {
         pendingRequests[req.id] = {
@@ -88,12 +91,21 @@ const saveReq = (msg) => {
     return fpng;
 };
 
+function fileToUrl(fn: string) {
+    return fn.replace(/^(static|public)/, "").replace(/\\/g, "/");
+}
+
 /**
  * Initializes the makecode rendering engine
  * @param options
  * @returns
  */
-export function init(options: { url: string; cache: string; lang?: string }) {
+export function init(options: {
+    url: string;
+    cache: string;
+    lang?: string;
+    extraCacheKey?: string;
+}) {
     return (
         initPromise ||
         (initPromise = new Promise((resolve) => {
@@ -102,6 +114,7 @@ export function init(options: { url: string; cache: string; lang?: string }) {
             editorUrl = options.url;
             imagePath = options.cache;
             lang = options.lang;
+            extraCacheKey = options.extraCacheKey;
 
             (async () => {
                 console.info(`mkcd: storing images in ${imagePath}`);
@@ -136,16 +149,10 @@ export function init(options: { url: string; cache: string; lang?: string }) {
                             const fn = saveReq(msg);
                             // return and cache
                             console.debug(`mkcd: done ${fn}`);
-                            r.resolve(
-                                (renderedCache[id] = {
-                                    req: r.req,
-                                    url: fn
-                                        .replace(/^(static|public)/, "")
-                                        .replace(/\\/g, "/"),
-                                    width: msg.width,
-                                    height: msg.height,
-                                })
-                            );
+                            r.resolve({
+                                req: r.req,
+                                url: fileToUrl(fn),
+                            });
                             break;
                         }
                     }

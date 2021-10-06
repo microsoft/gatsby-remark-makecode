@@ -57,6 +57,7 @@ module.exports = async (
     await init({
         url,
         cache: "./public/images/makecode",
+        extraCacheKey: `jacdac: ${jacdacVersion}, extensions: ${jacdacExtensions}`,
     });
     /*
   {
