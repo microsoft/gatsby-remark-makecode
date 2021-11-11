@@ -88,22 +88,22 @@ module.exports = async (
     });
     await Promise.all(
         codeNodes.map(async ({ node, attrString }) => {
-            const { value, lang } = node;
+            const { value: source, lang } = node;
 
             try {
                 const options = {
                     pixelDensity: 1,
-                    package: sniffPackages(value),
+                    package: sniffPackages(source),
                 };
 
                 //console.debug(`makecode snippet`, options);
                 const rendered = await render({
-                    code: value,
+                    code: source,
                     options,
                 });
                 // store rendered in node
                 node.value = JSON.stringify({
-                    source: node.value,
+                    source,
                     rendered,
                 });
                 //node.html = `html`;
@@ -113,6 +113,10 @@ module.exports = async (
                     `Error during makecode execution. Leaving code block unchanged`
                 );
                 console.log(error);
+
+                node.value = JSON.stringify({
+                    source,
+                });
             }
 
             return node;
