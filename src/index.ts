@@ -53,7 +53,7 @@ function parseSnippet(source: string) {
         }
 
         // parse front matter
-        front?.replace(/(.+):\s*(.+)\s*\n/g, (m, name, value) => {
+        front?.replace(/([a-z0-9]+):\s*(.+)\s*\n/g, (m, name, value) => {
             switch (name) {
                 case "dep":
                     meta.dependencies.push(value);
