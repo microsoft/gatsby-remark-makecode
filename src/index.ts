@@ -25,9 +25,58 @@ const jacdacInfoPromise = fetchJacdacInfo();
 
 const validLanguages = [`blocks`];
 
-const sniffPackages = (src: string) => {
-    const dependencies = {};
-    jacdacExtensions
+function unique(values: string[]): string[] {
+    return Array.from(new Set(values).keys());
+}
+
+function parseSnippet(source: string) {
+    let code = "";
+    const meta: {
+        editor?: string;
+        snippet?: boolean;
+        dependencies: string[];
+    } = {
+        dependencies: [],
+    };
+
+    if (/^-----\n/.test(source)) {
+        let front: string;
+        const parts = source.replace(/^-----\n/, "").split(/-----\n/gm);
+        switch (parts.length) {
+            case 1:
+                front = undefined;
+                code = source;
+                break;
+            default:
+                [front, code] = parts;
+                break;
+        }
+
+        // parse front matter
+        front?.replace(/(.+):\s*(.+)\s*\n/g, (m, name, value) => {
+            switch (name) {
+                case "dep":
+                    meta.dependencies.push(value);
+                    break;
+                case "snippet":
+                    meta.snippet = !!value;
+                    break;
+                case "editor":
+                    meta.editor = value;
+                    break;
+                default:
+                    meta[name] = value;
+            }
+            return "";
+        });
+    } else {
+        code = source;
+    }
+
+    // sniff services
+    const src = code;
+    const mkcds = jacdacExtensions;
+    mkcds
         .filter((info) => {
             return (
                 src.indexOf(info.client.qName) > -1 ||
@@ -40,13 +89,27 @@ const sniffPackages = (src: string) => {
                     info.client.repo
                 }#v${jacdacVersion}`
         )
-        .forEach((dep) => (dependencies[dep] = "1"));
+        .forEach((dep) => meta.dependencies.push(dep));
 
-    const deps = Object.keys(dependencies);
-    if (deps.length)
-        deps.unshift(`jacdac=github:microsoft/pxt-jacdac#v${jacdacVersion}`);
-    return deps.join(",");
-};
+    // add jacdac by default
+    if (!meta.dependencies.length)
+        meta.dependencies.push(
+            `jacdac=github:microsoft/pxt-jacdac#v${jacdacVersion}`
+        );
+
+    // ensure unique deps
+    meta.dependencies = unique(meta.dependencies);
+
+    // sniff target
+    if (!meta.editor) {
+        if (/basic\.show/.test(src)) meta.editor = "microbit";
+    }
+
+    return {
+        code,
+        meta,
+    };
+}
 
 module.exports = async (
     { markdownAST },
@@ -87,18 +150,18 @@ module.exports = async (
         return node;
     });
     await Promise.all(
-        codeNodes.map(async ({ node, attrString }) => {
-            const { value: source, lang } = node;
+        codeNodes.map(async ({ node }) => {
+            const { value: source } = node;
 
             try {
+                const { code, meta } = parseSnippet(source);
                 const options = {
                     pixelDensity: 1,
-                    package: sniffPackages(source),
+                    package: meta.dependencies.join(","),
                 };
-
                 //console.debug(`makecode snippet`, options);
                 const rendered = await render({
-                    code: source,
+                    code,
                     options,
                 });
                 // store rendered in node
