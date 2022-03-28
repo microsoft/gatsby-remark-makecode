@@ -148,7 +148,8 @@ export function init(options: {
                             // render to file
                             const fn = saveReq(msg);
                             // return and cache
-                            console.debug(`mkcd: done ${fn}`);
+                            const np = Object.keys(pendingRequests).length;
+                            console.debug(`mkcd: done ${fn} (${np} pending)`);
                             r.resolve({
                                 req: r.req,
                                 url: fileToUrl(fn),
