@@ -61,7 +61,20 @@ export function render(options: RenderRequest): Promise<RenderResult> {
         return Promise.resolve({ req, url: fileToUrl(fpng) });
     }
 
-    console.debug(`mkcd: new snippet ${id}`);
+    const pending = pendingRequests[req.id];
+    if (pending) {
+        console.debug(`mkcd: pending snippet ${id}`);
+        return new Promise((resolve) => {
+            const old = pending.resolve;
+            pending.resolve = (value) => {
+                old(value);
+                resolve(value);
+            };
+        });
+    }
+
+    const npending = Object.keys(pendingRequests).length;
+    console.debug(`mkcd: new snippet ${id} (${npending} pending)`);
 
     return new Promise((resolve) => {
         pendingRequests[req.id] = {

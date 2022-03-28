@@ -25,8 +25,8 @@
         "dist/**"
     ],
     "scripts": {
-        "build": "tsc",
-        "watch": "tsc --watch"
+        "build": "node node_modules/typescript/bin/tsc",
+        "watch": "node node_modules/typescript/bin/tsc --watch"
     },
     "engines": {
         "node": ">=12.13.0"
