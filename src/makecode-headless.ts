@@ -32,7 +32,7 @@ export interface RenderResult {
 
 const hash = (req: RenderRequest) =>
     nodeCrypto
-        .createHash("md5")
+        .createHash("sha256")
         .update(
             [
                 JSON.stringify(req),
