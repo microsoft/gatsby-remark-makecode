@@ -133,7 +133,7 @@ export function init(options: {
                 console.info(`mkcd: storing images in ${imagePath}`);
                 if (!fs.existsSync(imagePath))
                     fs.mkdirSync(imagePath, { recursive: true });
-                browser = await puppeteer.launch({ headless: true });
+                browser = await puppeteer.launch({ headless: true, args: ["--disable-setuid-sandbox"] });
                 puppeteerVersion = await browser.version();
                 console.info(`mkcd: browser ${puppeteerVersion}`);
                 page = await browser.newPage();
