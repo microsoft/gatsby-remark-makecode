@@ -40,6 +40,7 @@ In your .md, .mdx files, you can insert JavaScript snippets to be rendered in bl
 * build
 
 ```
+yarn install
 yarn build
 ```
 
