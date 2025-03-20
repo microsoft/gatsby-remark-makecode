@@ -1,4 +1,4 @@
-import * as puppeteer from "puppeteer";
+import { chromium, Browser, Page } from "playwright";
 import * as nodeCrypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
@@ -11,8 +11,8 @@ let lang: string;
 let imagePath: string;
 let extraCacheKey: string;
 
-let browser;
-let page;
+let browser: Browser;
+let page: Page;
 
 let pendingRequests: {
     [id: string]: {
@@ -20,7 +20,7 @@ let pendingRequests: {
         req: any;
     };
 } = {};
-let puppeteerVersion: string;
+let playwrightVersion: string;
 let makecodeVersion: string;
 
 export type RenderRequest = any;
@@ -38,7 +38,7 @@ const hash = (req: RenderRequest) =>
                 JSON.stringify(req),
                 editorUrl,
                 makecodeVersion,
-                puppeteerVersion,
+                playwrightVersion,
                 extraCacheKey,
                 lang || "en",
             ].join()
@@ -89,12 +89,10 @@ export function render(options: RenderRequest): Promise<RenderResult> {
 }
 
 const saveReq = (msg) => {
-    // id is the hash of the request
     const { id, uri } = msg;
     const pngPrefix = "data:image/png;base64,";
     const fpng = cacheName(id);
 
-    //console.debug(`mkcd: save ${fpng}`);
     if (uri.indexOf(pngPrefix) === 0) {
         const data = Buffer.from(uri.slice(pngPrefix.length), "base64");
         sharp(data).resize(undefined, msg.height).toFile(fpng);
@@ -133,9 +131,9 @@ export function init(options: {
                 console.info(`mkcd: storing images in ${imagePath}`);
                 if (!fs.existsSync(imagePath))
                     fs.mkdirSync(imagePath, { recursive: true });
-                browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
-                puppeteerVersion = await browser.version();
-                console.info(`mkcd: browser ${puppeteerVersion}`);
+                browser = await chromium.launch({ headless: true });
+                playwrightVersion = browser.version();
+                console.info(`mkcd: browser ${playwrightVersion}`);
                 page = await browser.newPage();
                 page.on("console", (msg) => console.log(msg.text()));
                 await page.exposeFunction("ssrPostMessage", (msg) => {
@@ -153,14 +151,11 @@ export function init(options: {
                             break;
                         }
                         case "renderblocks": {
-                            const id = msg.id; // this is the id you sent
+                            const id = msg.id;
                             const r = pendingRequests[id];
-                            //console.debug(`mkcd: received ${id}, ${r}`);
                             if (!r) return;
                             delete pendingRequests[id];
-                            // render to file
                             const fn = saveReq(msg);
-                            // return and cache
                             const np = Object.keys(pendingRequests).length;
                             console.debug(`mkcd: done ${fn} (${np} pending)`);
                             r.resolve({

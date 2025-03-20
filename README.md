@@ -16,7 +16,7 @@ or
 yarn add gatsby-remark-makecode
 ```
 
-* add puppeteer dependency to your project (full or core)
+* add playwright dependency to your project (full or core)
 
 ## Configuring the plugin
 
